@@ -2,13 +2,13 @@
 
 :::{toctree}
 
-backend/index.md
+backend/index
 :::
 
 ## Top level objects
 
 :::{eval-rst}
-.. module:: xrtist
+.. currentmodule:: xrtist
 
 .. autosummary::
    :toctree: generated/

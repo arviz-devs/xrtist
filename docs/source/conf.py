@@ -57,7 +57,7 @@ nb_kernel_rgx_aliases = {".*": "python3"}
 myst_enable_extensions = ["colon_fence", "deflist", "dollarmath", "amsmath"]
 
 autosummary_generate = True
-autodoc_mock_imports = ["matplotlib", "bokeh"]
+# autodoc_mock_imports = ["matplotlib", "bokeh"]
 autodoc_typehints = "none"
 autodoc_default_options = {
     "members": False,

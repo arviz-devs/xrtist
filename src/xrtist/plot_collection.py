@@ -1,9 +1,8 @@
 """Plot collection classes."""
 from importlib import import_module
+
 import numpy as np
 import xarray as xr
-
-
 from arviz.sel_utils import xarray_sel_iter
 
 

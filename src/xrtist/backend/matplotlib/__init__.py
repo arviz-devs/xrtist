@@ -1,6 +1,6 @@
 """Matplotlib interface layer."""
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 from matplotlib.cbook import normalize_kwargs
 from matplotlib.collections import PathCollection
@@ -8,6 +8,7 @@ from matplotlib.lines import Line2D
 from matplotlib.pyplot import subplots
 
 __all__ = ["create_plotting_grid", "line", "scatter"]
+
 
 class UnsetDefault:
     pass

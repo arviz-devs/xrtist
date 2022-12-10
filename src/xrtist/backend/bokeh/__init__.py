@@ -1,14 +1,16 @@
 """Bokeh interface layer."""
 
 import numpy as np
-from bokeh.plotting import figure
 from bokeh.layouts import gridplot
+from bokeh.plotting import figure
+
 
 class UnsetDefault:
     pass
 
 
 unset = UnsetDefault()
+
 
 def create_plotting_grid(
     number,
@@ -70,6 +72,7 @@ def create_plotting_grid(
     layout = gridplot(figures.tolist(), **kwargs)
     return layout, figures.squeeze() if squeeze else figures
 
+
 def filter_kwargs(kwargs, artist_kws):
     kwargs = {key: value for key, value in kwargs.items() if value is not unset}
     return {**artist_kws, **kwargs}
@@ -91,7 +94,7 @@ def scatter(
     facecolor=unset,
     edgecolor=unset,
     edgewidth=unset,
-    **artist_kws
+    **artist_kws,
 ):
     kwargs = dict(
         size=size,

@@ -55,6 +55,8 @@ doc = [
     "sphinx>=4",
     "sphinx-design",
     "watermark",
+    "matplotlib",
+    "bokeh",
 ]
 
 [tool.black]
@@ -79,4 +81,4 @@ testpaths = [
 ]
 
 [tool.coverage.run]
-source = ["xarray_einstats"]
+source = ["xrtist"]
