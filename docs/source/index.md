@@ -1,10 +1,11 @@
 # xrtist
 
-Welcome, don't use this library yet!
+Welcome, to ArviZ plots refactor playing ground:
 
 ```{toctree}
 :maxdepth: 2
 
-overview
+data_organizers
+backend_support
 api/index
 ```

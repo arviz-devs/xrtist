@@ -6,6 +6,7 @@ from matplotlib.cbook import normalize_kwargs
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.pyplot import subplots
+from matplotlib.text import Text
 
 __all__ = ["create_plotting_grid", "line", "scatter"]
 
@@ -74,7 +75,7 @@ def _filter_kwargs(kwargs, artist, artist_kws):
 
 def line(x, y, target, *, color=unset, alpha=unset, linewidth=unset, linestyle=unset, **artist_kws):
     kwargs = dict(color=color, alpha=alpha, linewidth=linewidth, linestyle=linestyle)
-    return target.plot(x, y, **_filter_kwargs(kwargs, Line2D, artist_kws))
+    return target.plot(x, y, **_filter_kwargs(kwargs, Line2D, artist_kws))[0]
 
 
 def scatter(
@@ -94,3 +95,8 @@ def scatter(
         s=size, marker=marker, alpha=alpha, c=facecolor, edgecolors=edgecolor, linewidths=edgewidth
     )
     return target.scatter(x, y, **_filter_kwargs(kwargs, None, artist_kws))
+
+
+def text(x, y, string, target, *, size=unset, alpha=unset, color=unset, **artist_kws):
+    kwargs = dict(fontsize=size, alpha=alpha, color=color)
+    return target.text(x, y, string, **_filter_kwargs(kwargs, Text, artist_kws))

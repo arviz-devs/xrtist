@@ -73,14 +73,14 @@ def create_plotting_grid(
     return layout, figures.squeeze() if squeeze else figures
 
 
-def filter_kwargs(kwargs, artist_kws):
+def _filter_kwargs(kwargs, artist_kws):
     kwargs = {key: value for key, value in kwargs.items() if value is not unset}
     return {**artist_kws, **kwargs}
 
 
 def line(x, y, target, *, color=unset, alpha=unset, linewidth=unset, linestyle=unset, **artist_kws):
     kwargs = dict(color=color, alpha=alpha, line_width=linewidth, line_dash=linestyle)
-    return target.line(x, y, **filter_kwargs(kwargs, artist_kws))
+    return target.line(x, y, **_filter_kwargs(kwargs, artist_kws))
 
 
 def scatter(
@@ -105,4 +105,9 @@ def scatter(
         line_color=edgecolor,
         line_width=edgewidth,
     )
-    return target.scatter(x, y, **filter_kwargs(kwargs, artist_kws))
+    return target.scatter(x, y, **_filter_kwargs(kwargs, artist_kws))
+
+
+def text(x, y, string, target, *, size=unset, alpha=unset, color=unset, **artist_kws):
+    kwargs = dict(text_font_size=size, alpha=alpha, color=color)
+    return target.text(x, y, string, **_filter_kwargs(kwargs, artist_kws))

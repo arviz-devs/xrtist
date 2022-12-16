@@ -16,12 +16,14 @@ def subset_ds(ds, var_name, sel):
 
 
 class PlotCollection:
-    def __init__(self, data, viz_ds, aes=None, **kwargs):
+    def __init__(self, data, viz_ds, aes=None, backend=None, **kwargs):
 
         self.data = data
         self.preprocessed_data = None
         self.viz = viz_ds
         self.ds = xr.Dataset()
+        if backend is not None:
+            self.backend = backend
 
         if aes is None:
             aes = {}
@@ -58,8 +60,12 @@ class PlotCollection:
     ):
         if plot_grid_kws is None:
             plot_grid_kws = {}
-        plots_raw_shape = [len(data[col]) for col in cols]
-        n_plots = np.prod(plots_raw_shape)
+        if cols is None:
+            plots_raw_shape = ()
+            n_plots = 1
+        else:
+            plots_raw_shape = [len(data[col]) for col in cols]
+            n_plots = np.prod(plots_raw_shape)
         if n_plots <= col_wrap:
             n_rows, n_cols = 1, n_plots
         else:
@@ -68,16 +74,26 @@ class PlotCollection:
         plot_bknd = import_module(f".backend.{backend}", package="xrtist")
         fig, ax_ary = plot_bknd.create_plotting_grid(n_plots, n_rows, n_cols, **plot_grid_kws)
         col_id, row_id = np.meshgrid(np.arange(n_cols), np.arange(n_rows))
-        viz_ds = xr.Dataset(
-            {
-                "chart": fig,
-                "plot": (cols, ax_ary.flatten()[:n_plots].reshape(plots_raw_shape)),
-                "row": (cols, row_id.flatten()[:n_plots].reshape(plots_raw_shape)),
-                "col": (cols, col_id.flatten()[:n_plots].reshape(plots_raw_shape)),
-            },
-            coords={col: data[col] for col in cols},
-        )
-        return cls(data, viz_ds, **kwargs)
+        if n_plots > 1:
+            viz_ds = xr.Dataset(
+                {
+                    "chart": fig,
+                    "plot": (cols, ax_ary.flatten()[:n_plots].reshape(plots_raw_shape)),
+                    "row": (cols, row_id.flatten()[:n_plots].reshape(plots_raw_shape)),
+                    "col": (cols, col_id.flatten()[:n_plots].reshape(plots_raw_shape)),
+                },
+                coords={col: data[col] for col in cols},
+            )
+        else:
+            viz_ds = xr.Dataset(
+                {
+                    "chart": fig,
+                    "plot": ax_ary,
+                    "row": 0,
+                    "col": 0,
+                },
+            )
+        return cls(data, viz_ds, backend=backend, **kwargs)
 
     @classmethod
     def grid(
@@ -108,11 +124,11 @@ class PlotCollection:
             },
             coords={dim: data[dim] for dim in dims},
         )
-        return cls(data, viz_ds, **kwargs)
+        return cls(data, viz_ds, backend=backend, **kwargs)
 
     def _update_aes(self, ignore_aes=frozenset()):
         aes = [aes_key for aes_key in self.aes.keys() if aes_key not in ignore_aes]
-        aes_dims = [dim for sublist in list(self.aes.values()) for dim in sublist]
+        aes_dims = [dim for aes_key in aes for dim in self.aes[aes_key]]
         all_loop_dims = self.base_loop_dims.union(aes_dims)
         return aes, all_loop_dims
 
@@ -153,13 +169,14 @@ class PlotCollection:
             )
         for var_name, sel, isel in plotters:
             da = self.data.sel(sel)
-            ax = subset_ds(self.viz, "plot", sel)
+            target = subset_ds(self.viz, "plot", sel)
 
             aes_kwargs = {}
             for aes_key in aes:
                 aes_kwargs[aes_key] = subset_ds(self.ds, aes_key, sel)
 
-            fun_kwargs = {**kwargs, **aes_kwargs}
+            fun_kwargs = {**aes_kwargs, **kwargs}
+            fun_kwargs["backend"] = self.backend
             if preprocessed:
                 if self.preprocessed_data is None:
                     raise ValueError(
@@ -169,7 +186,7 @@ class PlotCollection:
                 fun_kwargs["preprocessed_data"] = pre_da
             if subset_info:
                 fun_kwargs = {**fun_kwargs, "var_name": var_name, "sel": sel, "isel": isel}
-            aux_artist = fun(da, ax=ax, **fun_kwargs)
+            aux_artist = fun(da, target=target, **fun_kwargs)
             if store_artist:
                 self.viz[fun_label].loc[sel] = aux_artist
 
