@@ -436,10 +436,10 @@ class PlotMuseum:
         viz_dt = DataTree.from_dict(viz_dict)
         return cls(data, viz_dt, backend=backend, **kwargs)
 
-    def _update_aes(self, ignore_aes=frozenset()):
+    def _update_aes(self, ignore_aes, coords):
         aes = [aes_key for aes_key in self._aes.keys() if aes_key not in ignore_aes]
         aes_dims = [dim for aes_key in aes for dim in self._aes[aes_key]]
-        all_loop_dims = self.base_loop_dims.union(aes_dims)
+        all_loop_dims = self.base_loop_dims.union(aes_dims).difference(coords.keys())
         return aes, all_loop_dims
 
     def plot_iterator(self, ignore_aes=frozenset()):
@@ -455,6 +455,7 @@ class PlotMuseum:
         fun,
         fun_label=None,
         *,
+        coords=None,
         ignore_aes=frozenset(),
         preprocessed=False,
         subset_info=False,
@@ -462,6 +463,8 @@ class PlotMuseum:
         artist_dims=None,
         **kwargs,
     ):
+        if coords is None:
+            coords = {}
         if self.dt is None:
             self.generate_aes_dt(self._aes, **self._kwargs)
         if artist_dims is None:
@@ -469,12 +472,14 @@ class PlotMuseum:
         if fun_label is None:
             fun_label = fun.__name__
 
-        aes, all_loop_dims = self._update_aes(ignore_aes)
+        data = self.data.sel(coords)
+
+        aes, all_loop_dims = self._update_aes(ignore_aes, coords)
         plotters = xarray_sel_iter(
-            self.data, skip_dims={dim for dim in self.data.dims if dim not in all_loop_dims}
+            data, skip_dims={dim for dim in data.dims if dim not in all_loop_dims}
         )
         if store_artist:
-            for var_name, da in self.data.items():
+            for var_name, da in data.items():
                 if var_name not in self.viz.children:
                     DataTree(name=var_name, parent=self.viz)
                 inherited_dims = [dim for dim in da.dims if dim in all_loop_dims]
@@ -486,16 +491,17 @@ class PlotMuseum:
                 self.viz[var_name][fun_label] = xr.DataArray(
                     np.empty(artist_shape, dtype=object),
                     dims=all_artist_dims,
-                    coords={dim: self.data[dim] for dim in inherited_dims},
+                    coords={dim: data[dim] for dim in inherited_dims},
                 )
 
         for var_name, sel, isel in plotters:
-            da = self.data[var_name].sel(sel)
-            target = subset_ds(self.get_viz(var_name), "plot", sel)
+            da = data[var_name].sel(sel)
+            sel_plus = {**sel, **coords}
+            target = subset_ds(self.get_viz(var_name), "plot", sel_plus)
 
             aes_kwargs = {}
             for aes_key in aes:
-                aes_kwargs[aes_key] = subset_ds(self.dt[var_name], aes_key, sel)
+                aes_kwargs[aes_key] = subset_ds(self.dt[var_name], aes_key, sel_plus)
 
             fun_kwargs = {**aes_kwargs, **kwargs}
             fun_kwargs["backend"] = self.backend
