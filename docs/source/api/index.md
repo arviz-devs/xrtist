@@ -14,4 +14,5 @@ backend/index
    :toctree: generated/
 
    PlotCollection
+   PlotMuseum
 :::
