@@ -8,8 +8,6 @@ Welcome, to ArviZ plots refactor playing ground:
 
 data_organizers
 plot_museum
-backend_support
-api/index
 ```
 
 ```{toctree}
